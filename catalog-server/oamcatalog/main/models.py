@@ -68,7 +68,7 @@ class Image(models.Model):
             'file_size': self.file_size,
             'file_format': self.file_format,
             'crs': self.crs,
-            'bbox': self.bbox.split(","),
+            'bbox': map(float, self.bbox.split(",")),
             'width': self.width,
             'height': self.height,
         }    

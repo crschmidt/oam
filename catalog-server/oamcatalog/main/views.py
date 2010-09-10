@@ -9,9 +9,17 @@ def layer(request, id=None):
         l = Layer()
         l.from_json(data)
         return HttpResponse(simplejson.dumps(l.to_json()))
-    else:
+    elif id != None and id != "all":
         l = Layer.objects.get(pk=id)
         return HttpResponse(simplejson.dumps(l.to_json()))
+    else:
+        layers = Layer.objects.all()
+        data = {'layers': [
+            l.to_json() for l in layers
+            ]
+        }    
+        return HttpResponse(simplejson.dumps(data))
+            
 
 def image(request, id=None):
     if id == None and request.method == "POST":

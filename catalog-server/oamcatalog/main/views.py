@@ -22,11 +22,19 @@ def layer(request, id=None):
             
 
 def image(request, id=None):
-    if id == None and request.method == "POST":
+    if id == None:
+        print id, request.method
+        print "hi"
         data = simplejson.loads(request.raw_post_data)
+        print "hi"
         i = Image()
+        print "hi"
         i.from_json(data)
+        print "hi"
         return HttpResponse(simplejson.dumps(i.to_json()))
+        print "hi"
     else:
-        i = Image.objects.get(pk=id)
-        return HttpResponse(simplejson.dumps(i.to_json()))
+        pass
+        #print "lo"
+        #i = Image.objects.get(pk=id)
+        #return HttpResponse(simplejson.dumps(i.to_json()))

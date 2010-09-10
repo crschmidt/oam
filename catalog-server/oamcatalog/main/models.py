@@ -55,7 +55,7 @@ class Image(models.Model):
         self.file_size = data['file_size']
         self.file_format = data['file_format']
         self.crs = data['crs']
-        self.bbox = data['bbox'].join(",")
+        self.bbox = ",".join(map(str,data['bbox']))
         self.width = data['width']
         self.height = data['height']
         self.save()

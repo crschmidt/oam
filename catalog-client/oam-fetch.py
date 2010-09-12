@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, os, optparse, urllib2, urlgrabber
+import sys, os, optparse, urllib2
+import urlgrabber, urlgrabber.progress
 # try:
 #     from osgeo import gdal, gdalconst
 # except ImportError:
@@ -38,8 +39,8 @@ def fetch_layer(bbox, opts):
     return json.loads(result)
 
 def fetch_images(layer, opts):
-    path = str(layer["id"])
-    if not opts.test:
+    path = str(opts.layer)
+    if not opts.test and not os.path.isdir(path):
         os.makedirs(path)
     for image in layer["images"]:
         filetype = image["url"].split(".")[-1]
@@ -47,7 +48,13 @@ def fetch_images(layer, opts):
         if opts.test:
             print >>sys.stderr, image["url"], "->", target
         else:
-            urlgrabber.urlgrab(image["url"], target)
+            meter = urlgrabber.progress.text_progress_meter()
+            urlgrabber.urlgrab(image["url"], target, progress_obj=meter)
+
+def run_gdalbuildvrt(opts):
+    layer_id = str(opts.layer)
+    glob = os.path.join(layer_id, "*.*")
+    os.system("gdalbuildvrt %s.vrt %s" % (layer_id, glob))
 
 # def merge_bounding_boxes(images):
 #     union = list(images[0]["bbox"])
@@ -73,3 +80,4 @@ if __name__ == "__main__":
     opts = parse_options()
     layer = fetch_layer([], opts)
     fetch_images(layer, opts)
+    run_gdalbuildvrt(opts)

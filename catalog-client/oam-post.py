@@ -74,7 +74,7 @@ def generate_description(filename, opts):
     for field in ("user", "url", "layer"):
         record.setdefault(field, getattr(opts, field))
     if record["url"].endswith("/"):
-        record["url"] += record["filename"]
+        record["url"] += os.path.basename(record["filename"])
     return record
 
 def post_description(filename, opts):

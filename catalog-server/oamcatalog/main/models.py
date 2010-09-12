@@ -38,6 +38,7 @@ class Layer(models.Model):
             'description': self.description,
             'owner': self.owner.id,
             'attribution': self.attribution.to_json(),
+            'images': [i.to_json() for i in self.image_set.all()]
         }    
 
 class Image(models.Model):
@@ -49,12 +50,14 @@ class Image(models.Model):
     bbox = models.CharField(max_length=255)
     width = models.IntegerField()
     height = models.IntegerField()
+    hash = models.CharField(max_length=100)
     def from_json(self, data):
         self.url = data['url']
         self.layer = Layer.objects.get(pk=data['layer'])
         self.file_size = data['file_size']
         self.file_format = data['file_format']
         self.crs = data['crs']
+        self.hash = data['hash']
         self.bbox = ",".join(map(str,data['bbox']))
         self.width = data['width']
         self.height = data['height']
@@ -68,7 +71,8 @@ class Image(models.Model):
             'file_size': self.file_size,
             'file_format': self.file_format,
             'crs': self.crs,
-            'bbox': self.bbox.split(","),
+            'bbox': map(float, self.bbox.split(",")),
             'width': self.width,
             'height': self.height,
+            'hash': self.hash
         }    

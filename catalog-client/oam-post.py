@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
-import sys, os, optparse, urllib2
+import sys, os, re, optparse, urllib2
 try:
     from hashlib import md5
+    md5 # pyflakes
 except ImportError:
     import md5
 try:
     from osgeo import gdal, gdalconst
+    gdal, gdalconst # pyflakes
 except ImportError:
     import gdal, gdalconst
 try:
     import json
+    json # pyflakes
 except ImportError:
     import simplejson as json
 
@@ -48,7 +51,14 @@ def compute_md5(filename,blocksize=(1<<20)):
 
 def extract_metadata(filename):
     print >>sys.stderr, "Reading metadata from %s." % filename
-    dataset = gdal.Open(filename, gdalconst.GA_ReadOnly)
+    if re.match(r'\w+://', filename):
+        source = "/vsicurl/" + filename # use the VSI curl driver
+        url = filename
+        filename = url.split("/")[-1]
+    else:
+        source = filename
+        url = None
+    dataset = gdal.Open(source, gdalconst.GA_ReadOnly)
     if dataset is None:
         raise Exception("Cannot open %s" % filename)
     xform = dataset.GetGeoTransform()
@@ -58,16 +68,22 @@ def extract_metadata(filename):
        xform[0] + dataset.RasterXSize * xform[1],
        xform[3] + dataset.RasterXSize * xform[4]
     ]   
-    return {
+    record = {
         "filename": filename,
         "file_format": dataset.GetDriver().ShortName,
         "width": dataset.RasterXSize,
         "height": dataset.RasterYSize,
         "crs": dataset.GetProjection(),
-        "file_size": os.path.getsize(filename),
-        "bbox": bbox,
-        "hash": compute_md5(filename)
+        "file_size": -1,
+        "bbox": bbox
     }
+    if url:
+        record["url"] = url
+        record["hash"] = md5.md5(url).hexdigest()
+    else:
+        record["file_size"] = os.path.getsize(filename)
+        record["hash"] = compute_md5(filename)
+    return record
 
 def generate_description(filename, opts):
     record = extract_metadata(filename)
@@ -84,7 +100,7 @@ def post_description(filename, opts):
     req = urllib2.Request(opts.service + "image/")
     try:
         response = urllib2.urlopen(req, content)
-    except IOError, e:
+    except IOError:
         print >>sys.stderr, "error."
         raise
     result = response.read()
@@ -92,7 +108,6 @@ def post_description(filename, opts):
     return json.loads(result)
 
 if __name__ == "__main__":
-    import pprint
     opts = parse_options()
     for filename in opts.files:
         if opts.test:

@@ -30,9 +30,6 @@ def parse_options():
     (opts, args) = parser.parse_args()
     if not opts.service.endswith("/"):
         opts.service += "/"
-    for field in ("layer",):
-        if not getattr(opts, field):
-            setattr(opts, field, args.pop(0))
     opts.files = args
     if len(opts.files) > 1 and not opts.url.endswith("/"):
         raise Exception(

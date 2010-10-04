@@ -26,11 +26,11 @@ def parse_options():
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
-    parser.add_option("-u", "--url", dest="url", help="Image URL")
+    parser.add_option("-u", "--url", dest="url", help="Image URL", default="")
     (opts, args) = parser.parse_args()
     if not opts.service.endswith("/"):
         opts.service += "/"
-    for field in ("layer", "url"):
+    for field in ("layer",):
         if not getattr(opts, field):
             setattr(opts, field, args.pop(0))
     opts.files = args
@@ -75,11 +75,11 @@ def extract_metadata(filename):
         "height": dataset.RasterYSize,
         "crs": dataset.GetProjection(),
         "file_size": -1,
+        "hash": "",
         "bbox": bbox
     }
     if url:
         record["url"] = url
-        record["hash"] = md5.md5(url).hexdigest()
     else:
         record["file_size"] = os.path.getsize(filename)
         record["hash"] = compute_md5(filename)
@@ -89,6 +89,8 @@ def generate_description(filename, opts):
     record = extract_metadata(filename)
     for field in ("user", "url", "layer"):
         record.setdefault(field, getattr(opts, field))
+    if not record["url"]:
+        raise Exception("URL not specified!")
     if record["url"].endswith("/"):
         record["url"] += os.path.basename(record["filename"])
     return record
@@ -106,6 +108,12 @@ def post_description(filename, opts):
     result = response.read()
     print >>sys.stderr, "done."
     return json.loads(result)
+
+def walk_path(path, opts):
+    pass
+
+def spider(url, opts):
+    pass
 
 if __name__ == "__main__":
     opts = parse_options()

@@ -66,13 +66,12 @@ def extract_metadata(filename):
        xform[3] + dataset.RasterXSize * xform[4]
     ]   
     record = {
-        "filename": filename,
         "file_format": dataset.GetDriver().ShortName,
         "width": dataset.RasterXSize,
         "height": dataset.RasterYSize,
         "crs": dataset.GetProjection(),
-        "file_size": -1,
-        "hash": "",
+        "file_size": None,
+        "hash": None,
         "bbox": bbox
     }
     if url:
@@ -80,6 +79,7 @@ def extract_metadata(filename):
     else:
         record["file_size"] = os.path.getsize(filename)
         record["hash"] = compute_md5(filename)
+        record["filename"] = filename
     return record
 
 def generate_description(filename, opts):
@@ -89,7 +89,7 @@ def generate_description(filename, opts):
     if not record["url"]:
         raise Exception("URL not specified!")
     if record["url"].endswith("/"):
-        record["url"] += os.path.basename(record["filename"])
+        record["url"] += os.path.basename(record.pop("filename"))
     return record
 
 def post_description(filename, opts):

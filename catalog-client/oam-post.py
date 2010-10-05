@@ -22,10 +22,11 @@ def parse_options():
     parser.add_option("-U", "--user", dest="user", help="OAM username")
     parser.add_option("-P", "--password", dest="pass", help="OAM password")
     parser.add_option("-s", "--service", dest="service",
-        help="OAM service base URL", default="http://adhoc.osgeo.osuosl.org:8000/")
+        help="OAM service base URL", default="http://adhoc.osgeo.osuosl.org:8000/api/")
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-r", "--recursive", dest="recursive", action="store_true", default=False, help="Perform recursive HTTP/FTP queries.")
+    parser.add_option("-c", "--license", dest="license", help="Redistribution license name")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
     parser.add_option("-u", "--url", dest="url", help="Image URL", default="")
     (opts, args) = parser.parse_args()
@@ -41,6 +42,7 @@ def compute_md5(filename,blocksize=(1<<20)):
     filesize = os.path.getsize(filename)
     f = file(filename, "rb")
     h = md5()
+    print >>sys.stderr, ""
     for i in range(0, filesize, blocksize):
         h.update(f.read(blocksize)) 
         print >>sys.stderr, "\rComputing MD5... %d%%" % (float(i)/filesize*100),
@@ -48,7 +50,7 @@ def compute_md5(filename,blocksize=(1<<20)):
     return h.hexdigest()
 
 def extract_metadata(filename):
-    print >>sys.stderr, "Reading metadata from %s." % filename
+    print >>sys.stderr, "? %s " % filename.split("/")[-1],
     if re.match(r'\w+://', filename):
         source = "/vsicurl/" + filename # use the VSI curl driver
         url = filename
@@ -93,12 +95,13 @@ def generate_description(filename, opts):
         raise Exception("URL not specified!")
     if record["url"].endswith("/"):
         record["url"] += os.path.basename(record.pop("filename"))
+    record["license"] = {"name": opts.license}
     return record
 
 def post_description(filename, opts):
     record = generate_description(filename, opts)
     content = json.dumps(record)
-    print >>sys.stderr, "Uploading description...",
+    print >>sys.stderr, "\r>", filename.split("/")[-1]
     req = urllib2.Request(opts.service + "image/")
     try:
         response = urllib2.urlopen(req, content)
@@ -106,7 +109,6 @@ def post_description(filename, opts):
         print >>sys.stderr, "error."
         raise
     result = response.read()
-    print >>sys.stderr, "done."
     return json.loads(result)
 
 def walk_path(path, opts):
@@ -145,7 +147,7 @@ def spider(urls, opts):
     queue.extend(urls)
     while queue:
         item = queue.pop(0)
-        print >>sys.stderr, "Fetching", item, "...",
+        print >>sys.stderr, "<", item, 
         req = urllib2.Request(item)
         try:
             response = urllib2.urlopen(req)
@@ -157,7 +159,7 @@ def spider(urls, opts):
             subdirs, imgs = scrape_http(result)
         else:
             subdirs, imgs = scrape_ftp(result)
-        print >>sys.stderr, len(subdirs), "subdirs &", len(imgs), "images found."
+        print >>sys.stderr, len(subdirs), ": subdirs /", len(imgs), "images"
         for subdir in subdirs:
             subdir = urlparse.urljoin(item, subdir)
             if not subdir.startswith(item): continue
@@ -165,7 +167,6 @@ def spider(urls, opts):
         for img in imgs:
             img = urlparse.urljoin(item, img)
             if not img.startswith(item): continue
-            print >>sys.stderr, "Scanning", img, "..."
             try:
                 if opts.test:
                     record = generate_description(img, opts)

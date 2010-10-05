@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import sys, os, re, optparse, urllib2
+import sys, os, re, optparse, urllib2, urlparse
 try:
     from hashlib import md5
     md5 # pyflakes
 except ImportError:
-    import md5
+    from md5 import md5
 try:
     from osgeo import gdal, gdalconst
     gdal, gdalconst # pyflakes
@@ -25,6 +25,7 @@ def parse_options():
         help="OAM service base URL", default="http://adhoc.osgeo.osuosl.org:8000/")
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
+    parser.add_option("-r", "--recursive", dest="recursive", action="store_true", default=False, help="Perform recursive HTTP/FTP queries.")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
     parser.add_option("-u", "--url", dest="url", help="Image URL", default="")
     (opts, args) = parser.parse_args()
@@ -39,7 +40,7 @@ def parse_options():
 def compute_md5(filename,blocksize=(1<<20)):
     filesize = os.path.getsize(filename)
     f = file(filename, "rb")
-    h = md5.md5()
+    h = md5()
     for i in range(0, filesize, blocksize):
         h.update(f.read(blocksize)) 
         print >>sys.stderr, "\rComputing MD5... %d%%" % (float(i)/filesize*100),
@@ -86,6 +87,8 @@ def generate_description(filename, opts):
     record = extract_metadata(filename)
     for field in ("user", "url", "layer"):
         record.setdefault(field, getattr(opts, field))
+    if not record["crs"]:
+        raise Exception("CRS unknown!")
     if not record["url"]:
         raise Exception("URL not specified!")
     if record["url"].endswith("/"):
@@ -109,14 +112,77 @@ def post_description(filename, opts):
 def walk_path(path, opts):
     pass
 
-def spider(url, opts):
-    pass
+href_match = re.compile(r'href="([^\.][^"]+)"', re.IGNORECASE)
+img_match = re.compile(r'\.tiff?', re.IGNORECASE)
+dir_match = re.compile(r'/$')
+
+def scrape_http(content):
+    imgs = []
+    dirs = []
+    for href in href_match.findall(content):
+        if img_match.search(href):
+            imgs.append(href)
+        elif dir_match.search(href):
+            dirs.append(href)
+    return dirs, imgs
+
+def scrape_ftp(content):
+    imgs = []
+    dirs = []
+    for line in content.split("\n"):
+        fields = line.split()
+        perms, size, file = fields[0], fields[4], fields[8:]
+        if perms.startswith("d"):
+            dirs.append(file[0])
+        elif perms.startswith("l") and file[-1:].endswith("/"):
+            dirs.append(file[0])
+        elif img_match.search(href):
+            imgs.append(file[0])
+    return dirs, imgs
+            
+def spider(urls, opts):
+    queue = []
+    queue.extend(urls)
+    while queue:
+        item = queue.pop(0)
+        print >>sys.stderr, "Fetching", item, "...",
+        req = urllib2.Request(item)
+        try:
+            response = urllib2.urlopen(req)
+        except IOError, e:
+            print >>sys.stderr, e
+            continue
+        result = response.read()
+        if item.startswith("http"):
+            subdirs, imgs = scrape_http(result)
+        else:
+            subdirs, imgs = scrape_ftp(result)
+        print >>sys.stderr, len(subdirs), "subdirs &", len(imgs), "images found."
+        for subdir in subdirs:
+            subdir = urlparse.urljoin(item, subdir)
+            if not subdir.startswith(item): continue
+            queue.append(subdir)
+        for img in imgs:
+            img = urlparse.urljoin(item, img)
+            if not img.startswith(item): continue
+            print >>sys.stderr, "Scanning", img, "..."
+            try:
+                if opts.test:
+                    record = generate_description(img, opts)
+                    print json.dumps(record)
+                else:
+                    record = post_description(img, opts)
+            except Exception, e:
+                print >>sys.stderr, e
 
 if __name__ == "__main__":
     opts = parse_options()
-    for filename in opts.files:
-        if opts.test:
-            record = generate_description(filename, opts)
-        else:
-            record = post_description(filename, opts)
-        print json.dumps(record)
+    if opts.recursive:
+        spider(opts.files, opts)
+    else:
+        for filename in opts.files:
+            if opts.test:
+                record = generate_description(filename, opts)
+            else:
+                record = post_description(filename, opts)
+            print json.dumps(record)

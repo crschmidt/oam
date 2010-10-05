@@ -1,21 +1,46 @@
 from django.db import models
 from django.contrib.auth.models import User
+from main.helpers import ApplicationError
 
-class Attribution(models.Model):
+class License(models.Model):
     name = models.CharField(max_length=255)
-    attribution = models.TextField(blank=True, null=True)
-    restrictions = models.TextField()
+    noncommercial = models.BooleanField(default=False)
+    attribution = models.BooleanField(default=False)
+    sharealike = models.BooleanField(default=False)
+    additional = models.TextField()
+    url = models.CharField(max_length=255, blank=True, null=True)
+    flaglist = ['noncommercial', 'attribution', 'sharealike']
     def from_json(self, data):
-        self.name = data['name']
-        self.attribution = data['attribution']
-        self.restrictions = data.get('restrictions', '')
+        errors = []
+        for key in ['name', 'url', 'restrictions', 'url']:
+            setattr(self, key, data.get(key, ''))
+        flags = data.get('options', {})
+        for flag,value in flags.items():
+            if flag not in self.flaglist:
+                errors.append("Flag %s not supported: only supports %s" % (flag, ",".join(self.flaglist)))
+            if value == "required": 
+                setattr(self, flag, True)
+            else:
+                errors.append("Only value supported for flags is 'required'")
+        if errors:
+            raise Exception(errors)
         self.save()
         return self
     def to_json(self):
-        return {'name': self.name,
-            'restrictions': self.restrictions,
-            'attribution': self.attribution
+        flags = {}
+        for key in self.flaglist:
+            if getattr(self, key) == True:
+                flags[key] = 'required'
+
+        return {
+            'name': self.name,
+            'additional': self.additional,
+            'url': self.url,
+            'flags': flags
         }    
+
+class Attribution(models.Model):
+    attribution = models.TextField()
 
 class Layer(models.Model):
     name = models.CharField(max_length=255)
@@ -27,7 +52,6 @@ class Layer(models.Model):
         self.name = data['name']
         self.description = data['description']
         self.owner = User.objects.get(pk=data['user'])
-        self.attribution = Attribution().from_json(data['attribution'])
         self.save()
         return self
 
@@ -43,36 +67,62 @@ class Layer(models.Model):
 
 class Image(models.Model):
     url = models.TextField()
-    layer = models.ForeignKey(Layer)
+    layer = models.ForeignKey(Layer, blank=True, null=True)
     file_size = models.IntegerField()
     file_format = models.CharField(max_length=255)
     crs = models.CharField(max_length=100)
     bbox = models.CharField(max_length=255)
     width = models.IntegerField()
     height = models.IntegerField()
-    hash = models.CharField(max_length=100)
+    hash = models.CharField(max_length=100, blank=True, null=True)
+    license = models.ForeignKey(License, blank=True, null=True)
+    attribution = models.ForeignKey(Attribution, blank=True, null=True)
     def from_json(self, data):
-        self.url = data['url']
-        self.layer = Layer.objects.get(pk=data['layer'])
-        self.file_size = data['file_size']
-        self.file_format = data['file_format']
-        self.crs = data['crs']
-        self.hash = data['hash']
-        self.bbox = ",".join(map(str,data['bbox']))
-        self.width = data['width']
-        self.height = data['height']
+        errors = []
+        warnings = []
+        for key in ['file_size', 'file_format', 'url','width', 'height']:
+            if key in data:
+                setattr(self, key, data[key])
+            else:
+                errors.append("No %s provided for image." % key)
+        if 'layer' in data:
+            errors.append("No layer handling available at this time. Please upload images without a Layer identifier.")
+        if 'crs' in data:
+            self.crs = data['crs']
+        if not 'hash' in data:
+            warnings.append("No hash included in data. Not preventing duplicates.")
+        else:
+            self.hash = data['hash']
+        if 'bbox' in data:
+            self.bbox = ",".join(map(str,data['bbox']))
+        else:
+            errors.append("No BBOX provided for image.")
+        if not 'license' in data:
+            errors.append("No license ID was passed")
+        elif isinstance(data['license'], int):
+            self.license = License.objects.get(pk=data['license'])
+        elif isinstance(data['license'], dict):
+             l = License()
+             l.from_json(data['license'])
+             l.save()
+             self.license = l
+        else:
+            errors.append("Some license information is required.")
+        if errors:
+            raise ApplicationError(errors)
         self.save()
         return self
     def to_json(self):
         return {
             'id': self.id,
             'url': self.url,
-            'layer': self.layer.id,
+#            'layer': self.layer.id,
             'file_size': self.file_size,
             'file_format': self.file_format,
             'crs': self.crs,
             'bbox': map(float, self.bbox.split(",")),
             'width': self.width,
             'height': self.height,
-            'hash': self.hash
+            'hash': self.hash,
+            'license': self.license.to_json()
         }    

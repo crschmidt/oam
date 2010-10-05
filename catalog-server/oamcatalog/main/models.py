@@ -78,21 +78,22 @@ class Image(models.Model):
     license = models.ForeignKey(License, blank=True, null=True)
     attribution = models.ForeignKey(Attribution, blank=True, null=True)
     def from_json(self, data):
+        required_keys = ['url', 'width', 'height']
+        optional_keys = ['file_size', 'file_format', 'hash', 'crs']
         errors = []
         warnings = []
-        for key in ['file_size', 'file_format', 'url','width', 'height']:
+        for key in required_keys:
             if key in data:
                 setattr(self, key, data[key])
             else:
                 errors.append("No %s provided for image." % key)
+        for key in optional_keys:
+            if key in data:
+                setattr(self, key, data[key])
+            else:
+                warnings.append("Missing %s in image data. This is a recommended field." % key)
         if 'layer' in data:
             errors.append("No layer handling available at this time. Please upload images without a Layer identifier.")
-        if 'crs' in data:
-            self.crs = data['crs']
-        if not 'hash' in data:
-            warnings.append("No hash included in data. Not preventing duplicates.")
-        else:
-            self.hash = data['hash']
         if 'bbox' in data:
             self.bbox = ",".join(map(str,data['bbox']))
         else:

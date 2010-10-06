@@ -78,6 +78,15 @@ def image(request, id=None):
         }   
         return json_response(request, data)
 
+def home(request):
+    images = Image.objects.order_by("-id")[0:10]
+    return render_to_response("home.html", {'images': images})
+
+def license_browse(request, id):
+    l = License.objects.get(pk=id)
+    images = l.image_set.order_by("-id")[0:5]
+    return render_to_response("license.html", {'license': l, 'recent_images': images})
+
 def image_browse(request, id):
     i = Image.objects.get(pk=id)
     return render_to_response("image.html", {'image': i})

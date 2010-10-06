@@ -3,6 +3,7 @@ from django.http import HttpResponse
 import simplejson
 from main.models import Layer, Image, User, License
 from main.helpers import *
+from django.shortcuts import render_to_response
 
 @jsonexception
 def layer(request, id=None):
@@ -76,3 +77,7 @@ def image(request, id=None):
             ]
         }   
         return json_response(request, data)
+
+def image_browse(request, id):
+    i = Image.objects.get(pk=id)
+    return render_to_response("image.html", {'image': i})

@@ -1,0 +1,18 @@
+<html>
+ <head>
+   <title>{% block title %}Untitled Page{% endblock %} &#x2014; OpenAerialMap</title>
+   <link rel="stylesheet" href="/static/website.css" type="text/css" />
+ </head>
+ <body>
+ <div id="header">
+   <h1><a href="/">{% block heading %}OpenAerialMap{% endblock %}</a></h1>
+ </div>
+ <div id="mainnav" class="nav">
+ </div>
+ <div id="main">
+ {% block content %}
+ {% endblock %}
+ </div>
+ </body>
+</html> 
+

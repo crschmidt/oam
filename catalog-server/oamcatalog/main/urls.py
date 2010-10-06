@@ -2,6 +2,7 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns('main.views',
     # Example:
+    (r'^image/(?P<id>[0-9]+)/$', 'image_browse'),
     (r'^api/layer/$', 'layer'),
     (r'^api/layer/(?P<id>[0-9]+)/$', 'layer'),
     (r'^api/license/$', 'license'),

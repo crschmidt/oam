@@ -52,6 +52,10 @@ def image(request, id=None):
         return json_response(request, i)
     else:
         images = Image.objects.all()
+        if 'archive' in request.GET and request.GET['archive'].lower() in ("true", "t", "1"):
+            images = images.filter(archive=True)
+        else:
+            images = images.filter(archive=False)
         data = {'images': [
             i.to_json() for i in images 
             ]

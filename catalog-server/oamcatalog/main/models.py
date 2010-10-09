@@ -77,15 +77,17 @@ class Image(models.Model):
     hash = models.CharField(max_length=100, blank=True, null=True)
     license = models.ForeignKey(License, blank=True, null=True)
     attribution = models.ForeignKey(Attribution, blank=True, null=True)
+    vrt = models.TextField(blank=True, null=True)
+    archive = models.BooleanField(default=True)
     def from_json(self, data):
         required_keys = ['url', 'width', 'height']
-        optional_keys = ['file_size', 'file_format', 'hash', 'crs']
+        optional_keys = ['file_size', 'file_format', 'hash', 'crs', 'vrt', 'archive']
         errors = []
         warnings = []
         for key in required_keys:
             if key in data:
                 setattr(self, key, data[key])
-            else:
+            elif getattr(self, key) == None:
                 errors.append("No %s provided for image." % key)
         for key in optional_keys:
             if key in data:
@@ -117,7 +119,6 @@ class Image(models.Model):
         return {
             'id': self.id,
             'url': self.url,
-#            'layer': self.layer.id,
             'file_size': self.file_size,
             'file_format': self.file_format,
             'crs': self.crs,
@@ -125,5 +126,6 @@ class Image(models.Model):
             'width': self.width,
             'height': self.height,
             'hash': self.hash,
-            'license': self.license.to_json()
+            'license': self.license.to_json(),
+            'vrt': self.vrt
         }    

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<ul>
+ <li>URL: <a href="{{image.url}}">URL</a></li>
+ <li>Image Size: {{image.width}} x {{image.height}}</li>
+ <li>License: <a href="/license/{{image.license.id}}/">{{image.license.name}}</a></li>
+ <li>BBOX: {{ image.bbox}}</li>
+</ul> 
+{% endblock %}

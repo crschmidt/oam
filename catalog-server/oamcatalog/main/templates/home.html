@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+  <h3>Recently Uploaded Images</h3>
+  <ul>
+  {% for image in images %}
+    <li><a href="/image/{{image.id}}/">{{image.id}}</a></li>
+  {% endfor %}
+  </ul>
+{% endblock %}  

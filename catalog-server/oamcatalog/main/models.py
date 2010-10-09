@@ -68,9 +68,9 @@ class Layer(models.Model):
 class Image(models.Model):
     url = models.TextField()
     layer = models.ForeignKey(Layer, blank=True, null=True)
-    file_size = models.IntegerField()
-    file_format = models.CharField(max_length=255)
-    crs = models.CharField(max_length=100)
+    file_size = models.IntegerField(blank=True,null=True)
+    file_format = models.CharField(max_length=255, blank=True,null=True)
+    crs = models.CharField(max_length=100, blank=True, null=True)
     bbox = models.CharField(max_length=255)
     width = models.IntegerField()
     height = models.IntegerField()

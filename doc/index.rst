@@ -186,15 +186,3 @@ would work to find ways for interested parties to hook up with resources to
 host their applications; however, the core of the project would be around
 maintaining and improving the imagery index.
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

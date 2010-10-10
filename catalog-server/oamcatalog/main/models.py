@@ -1,4 +1,4 @@
-from django.db import models
+from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from main.helpers import ApplicationError
 
@@ -65,6 +65,43 @@ class Layer(models.Model):
             'images': [i.to_json() for i in self.image_set.all()]
         }    
 
+class WMS(models.Model):
+    url = models.TextField()
+    layer = models.CharField(max_length=255)
+    attribution = models.ForeignKey(Attribution)
+    owner = models.ForeignKey(User)
+    capabilities = models.TextField(blank=True, null=True)
+    capabilities_date = models.DateTimeField(blank=True, null=True)
+    def from_json(self, data):
+        required_keys = ['url', 'layer']
+        optional_keys = ['capabilities']
+        errors = []
+        warnings = []
+        for key in required_keys:
+            if key in data:
+                setattr(self, key, data[key])
+            elif getattr(self, key) == None:
+                errors.append("No %s provided for WMS." % key)
+        for key in optional_keys:
+            if key in data:
+                setattr(self, key, data[key])
+            else:
+                warnings.append("Missing %s in image data. This is a recommended field." % key)
+        if errors:
+            raise ApplicationError(errors)
+        self.owner = User.objects.get(pk=1)
+        self.capabilities_date = None
+        self.save()
+        return self
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'url': self.url,
+            'layer': self.layer,
+            'owner': self.owner.id,
+        }
+
 class Image(models.Model):
     url = models.TextField()
     layer = models.ForeignKey(Layer, blank=True, null=True)
@@ -78,7 +115,9 @@ class Image(models.Model):
     license = models.ForeignKey(License, blank=True, null=True)
     attribution = models.ForeignKey(Attribution, blank=True, null=True)
     vrt = models.TextField(blank=True, null=True)
+    vrt_date = models.DateTimeField(blank=True,null=True)
     archive = models.BooleanField(default=True)
+    owner = models.ForeignKey(User)
     def from_json(self, data):
         required_keys = ['url', 'width', 'height']
         optional_keys = ['file_size', 'file_format', 'hash', 'crs', 'vrt', 'archive']
@@ -113,6 +152,8 @@ class Image(models.Model):
             errors.append("Some license information is required.")
         if errors:
             raise ApplicationError(errors)
+        self.vrt_date = None
+        self.owner = User.objects.get(pk=1)
         self.save()
         return self
     def to_json(self):
@@ -127,5 +168,6 @@ class Image(models.Model):
             'height': self.height,
             'hash': self.hash,
             'license': self.license.to_json(),
-            'vrt': self.vrt
+            'vrt': self.vrt,
+            'vrt_date': self.vrt_date
         }    

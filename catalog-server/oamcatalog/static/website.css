@@ -1,0 +1,48 @@
+body {
+margin: 0px;
+font-family: Georgia, Minion, LucidaBright, Palatino, serif;
+}
+#mainnav {
+background: rgb(233,238,249);
+border: none;
+border-bottom: 1px solid #d7d7d7;
+ margin: .66em 0 .33em;
+ padding: .2em 0;
+ height: 10px;
+margin-top: 0px;
+}
+
+/* Accommodate our login info at the bottom of the page */
+#footer {
+border-bottom: 1px solid;
+padding-left: 10px;
+padding-right: 10px;
+}
+
+#header {
+background: #9D9FA1;
+color: #FFFFFF;
+font-family: "Trebuchet MS", Verdana, Lucida-Sans, Helvetica, Arial, sans-serif;
+font-size: 44px;
+text-shadow: 2px 2px 3px gray;
+height: 64px;
+padding: 4px 16px 0px 16px;
+vertical-align: top;
+}
+
+h1 {
+   font-size: 100%;
+   margin: 0px;
+} 
+h1 a {
+   text-decoration: none;
+   color: white;
+}  
+#main {
+    padding: 10px; 
+}   
+
+#user {
+    float: right;
+    padding-right: 10px;
+}    

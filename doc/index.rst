@@ -29,8 +29,8 @@ The Approach
 ------------
 
 The OAM 'problem', as it has been described so far, has oftentimes been
-bunched with a bunch of other problems. For the purpose of this attmept,
-we are going to deliberately and explicitly seperate out the various 
+bunched with a bunch of other problems. For the purpose of this attempt,
+we are going to deliberately and explicitly separate out the various 
 aspects of the problem. 
 
 The key to this approach is to make each step of the process as simple as
@@ -49,11 +49,11 @@ The key parts of such an infrastructure are:
      everything from a WMS to a set of tiles that can be made available
      offline.
 
-In order to support these mechanisms -- and to keep them seperate -- there
+In order to support these mechanisms -- and to keep them separate -- there
 is no association between the Storage and the Index. The OAM project does
 not need to provide storage -- instead, we simply document a way for users
 to publish their imagery, and document how to list such imagery in a 
-publically accessible index.
+publicly accessible index.
 
 Imagery Index
 +++++++++++++
@@ -63,7 +63,7 @@ to be simple. The primary object that the Catalog focuses on is Images.
 An image consists of a URL and some metadata designed to make filtering
 and accessing the imagery possible. It will also include a 'cache' of
 information determined directly from the imagery that is designed to make
-it easier for tools to use the imagery without neccesarily requesting it --
+it easier for tools to use the imagery without necessarily requesting it --
 for example, image size in pixels. (This can be combined with the
 bounds of the image to generate a resolution, or level of detail, for the
 image.)
@@ -174,7 +174,7 @@ At the same time, you could have someone who wrote a tool to download a set of
 imagery and put it on a hard drive to ship into a crisis zone, as was done
 during the Haiti crisis, to make the source imagery available for deeper
 analysis in GIS tools. You can imagine someone building a tool to create a
-single, large mosaic -- or make that mosaic avaialble as a WMS.
+single, large mosaic -- or make that mosaic available as a WMS.
 
 In all of these cases, we would encourage users to work with the community to
 contribute their applications to a centralized home in the OAM project,

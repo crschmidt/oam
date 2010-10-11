@@ -40,14 +40,14 @@ maintenance.
 
 The key parts of such an infrastructure are:
   
-   * Imagery Index -- a readily accessible way of finding information about
-     imagery that is available and how to access it.
-   * Storage -- A distributed set of resources through which imagery can be
-     made available for access by OAM tools.
-   * Access Tools -- Tools which use the Index and access data from Storage
-     to build output that users of the OAM data will want. This includes
-     everything from a WMS to a set of tiles that can be made available
-     offline.
+* Imagery Index -- a readily accessible way of finding information about
+  imagery that is available and how to access it.
+* Storage -- A distributed set of resources through which imagery can be
+  made available for access by OAM tools.
+* Access Tools -- Tools which use the Index and access data from Storage
+  to build output that users of the OAM data will want. This includes
+  everything from a WMS to a set of tiles that can be made available
+  offline.
 
 In order to support these mechanisms -- and to keep them separate -- there
 is no association between the Storage and the Index. The OAM project does
@@ -79,6 +79,9 @@ deliberate -- and a big part of the difference between the OAM of the future
 and the OAM of the past. Rather than being tied to a single centralized 
 server, the OAM catalog is an index of data hosted elsewhere -- allowing that
 piece of the puzzle to be easily swapped out for any other.
+
+For more information on the existing work on the Imagery Index, visit
+:doc:`imageryindex`.
 
 Storage 
 +++++++
@@ -119,11 +122,15 @@ network imagery, this is not the case, and as such, a different set of defaults
 will need to be built and optimized as the project grows.
 
 The concept behind the storage layer is:
-  * Use simple, existing technologies
-  * Search out friendly patrons in the short term, and investigate more  
-    complete solutions in the long term
-  * Treat the URL/HTTP access as the primary way to find information,
-    and don't tie storage to any aspect of the catalog directly.
+
+* Use simple, existing technologies
+* Search out friendly patrons in the short term, and investigate more  
+  complete solutions in the long term
+* Treat the URL/HTTP access as the primary way to find information,
+  and don't tie storage to any aspect of the catalog directly.
+
+For more information on the existing work on Storage, visit
+:doc:`storage`.
 
 Access Tools
 ++++++++++++
@@ -186,3 +193,4 @@ would work to find ways for interested parties to hook up with resources to
 host their applications; however, the core of the project would be around
 maintaining and improving the imagery index.
 
+For more information on Access Tools, visit :doc:`accesstools`.

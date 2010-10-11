@@ -52,7 +52,8 @@ def image(request, id=None):
     elif id != None:
         i = Image.objects.get(pk=id)
         if request.method == "POST":
-            i.from_json()
+            data = simplejson.loads(request.raw_post_data)
+            i.from_json(data)
             i.save()
         return json_response(request, i)
     else:

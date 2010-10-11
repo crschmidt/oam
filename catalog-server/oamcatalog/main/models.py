@@ -139,6 +139,8 @@ class Image(models.Model):
             self.bbox = ",".join(map(str,data['bbox']))
         else:
             errors.append("No BBOX provided for image.")
+        if 'archive' in data:
+            self.archive = data['archive']
         if not 'license' in data:
             errors.append("No license ID was passed")
         elif isinstance(data['license'], int):
@@ -167,6 +169,7 @@ class Image(models.Model):
             'width': self.width,
             'height': self.height,
             'hash': self.hash,
+            'archive': self.archive,
             'license': self.license.to_json(),
             'vrt': self.vrt,
             'vrt_date': self.vrt_date

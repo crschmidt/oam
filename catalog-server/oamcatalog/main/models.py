@@ -33,6 +33,7 @@ class License(models.Model):
                 flags[key] = 'required'
 
         return {
+            'id': self.id,
             'name': self.name,
             'additional': self.additional,
             'url': self.url,

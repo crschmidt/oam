@@ -28,6 +28,23 @@ General API Information
 The Imagery Index API is designed with REST in mind. At its core, each 
 resource has a representation as JSON. 
 
+Errors
+------
+
+Errors are represented in JSON. They will have an 'error' key, and a 'type'
+key. They also have an 'unexpected' key, which indicates whether the 
+error is something that application was expecting; in cases where the 
+server is broken in some way, you will get an 'unexpected' key set to
+true instead of false.
+
+::
+
+  {
+    "unexpected": false, 
+    "type": "ApplicationError", 
+    "error": "No width provided for image., No height provided for image., No BBOX provided for image., No license ID was passed"
+  }
+
 .. _image:
 
 Image API

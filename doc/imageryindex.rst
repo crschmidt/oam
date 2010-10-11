@@ -82,3 +82,13 @@ representation representation::
     "vrt_date": null,
     "width": 200
   }
+
+Server
+++++++
+
+Currently, an implementation of the OAM ImageryIndex is available and running
+at:
+
+  http://oam.osgeo.org/
+
+  

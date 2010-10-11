@@ -194,3 +194,14 @@ host their applications; however, the core of the project would be around
 maintaining and improving the imagery index.
 
 For more information on Access Tools, visit :doc:`accesstools`.
+
+
+Table of Contents
+=================
+
+.. toctree::
+   :maxdepth: 2
+      
+   imageryindex
+   storage
+   accesstools

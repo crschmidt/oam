@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}License {{license.name}}{% endblock %}
+{% block content %}
+{{ license.name }}
+<h3>Recently Upload Images under this License</h3>
+<ul>
+  {% for image in recent_images %}
+  <li><a href="/image/{{image.id}}/">{{image.id}}</a></li>
+  {% endfor %}
+</ul>  
+{% endblock %}

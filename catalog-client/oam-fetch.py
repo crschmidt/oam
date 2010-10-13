@@ -20,6 +20,7 @@ def parse_options():
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
+    parser.add_option("-i", "--image", dest="image", type="int", help="Image ID")
     (opts, args) = parser.parse_args()
     if not opts.service.endswith("/"):
         opts.service += "/"
@@ -38,10 +39,26 @@ def fetch_layer(bbox, opts):
     print >>sys.stderr, "done."
     return json.loads(result)
 
+def fetch_image(id, opts):
+    print >>sys.stderr, "Fetching description...",
+    req = urllib2.Request(opts.service + "image/%d/" % id)
+    try:
+        response = urllib2.urlopen(req)
+    except IOError, e:
+        print >>sys.stderr, "error."
+        raise
+    result = response.read()
+    print >>sys.stderr, "done."
+    return json.loads(result)
+
+
 def fetch_images(layer, opts):
-    path = str(opts.layer)
-    if not opts.test and not os.path.isdir(path):
-        os.makedirs(path)
+    if opts.layer:
+        path = str(opts.layer)
+        if not opts.test and not os.path.isdir(path):
+            os.makedirs(path)
+    else:
+        path = "."
     for image in layer["images"]:
         filetype = image["url"].split(".")[-1]
         target = os.path.join(path, image["hash"] + "." + filetype)
@@ -78,6 +95,13 @@ def run_gdalbuildvrt(opts):
 if __name__ == "__main__":
     import pprint
     opts = parse_options()
-    layer = fetch_layer([], opts)
-    fetch_images(layer, opts)
-    run_gdalbuildvrt(opts)
+    if opts.image:
+        image = fetch_image(opts.image, opts)
+        if opts.test:
+            print image
+        else:
+            fetch_images({"images": [image]}, opts)
+    else:
+        layer = fetch_layer([], opts)
+        fetch_images({"images": [opts.layer]}, opts)
+        run_gdalbuildvrt(opts)

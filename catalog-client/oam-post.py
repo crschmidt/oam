@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, re, optparse, urllib2, urlparse
+import sys, os, re, optparse, urllib2, urlparse, tempfile
 try:
     from hashlib import md5
     md5 # pyflakes
@@ -22,11 +22,12 @@ def parse_options():
     parser.add_option("-U", "--user", dest="user", help="OAM username")
     parser.add_option("-P", "--password", dest="pass", help="OAM password")
     parser.add_option("-s", "--service", dest="service",
-        help="OAM service base URL", default="http://adhoc.osgeo.osuosl.org:8000/api/")
+        help="OAM service base URL", default="http://oam.osgeo.org/api/")
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Verbosity", default="")
     parser.add_option("-r", "--recursive", dest="recursive", action="store_true", default=False, help="Perform recursive HTTP/FTP queries.")
-    parser.add_option("-c", "--license", dest="license", help="Redistribution license name")
+    parser.add_option("-c", "--license", dest="license", type="int", default=1, help="Redistribution license")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
     parser.add_option("-u", "--url", dest="url", help="Image URL", default="")
     (opts, args) = parser.parse_args()
@@ -67,7 +68,14 @@ def extract_metadata(filename):
        xform[3] + dataset.RasterYSize * xform[5],  
        xform[0] + dataset.RasterXSize * xform[1],
        xform[3] + dataset.RasterXSize * xform[4]
-    ]   
+    ]
+    vrt = None
+    _, tmp = tempfile.mkstemp()
+    try:
+        gdal.GetDriverByName('VRT').CreateCopy(tmp, dataset)
+        vrt = file(tmp).read()
+    finally:
+        os.unlink(tmp)
     record = {
         "file_format": dataset.GetDriver().ShortName,
         "width": dataset.RasterXSize,
@@ -75,7 +83,8 @@ def extract_metadata(filename):
         "crs": dataset.GetProjection(),
         "file_size": None,
         "hash": None,
-        "bbox": bbox
+        "bbox": bbox,
+        "vrt": vrt
     }
     if url:
         record["url"] = url
@@ -87,7 +96,7 @@ def extract_metadata(filename):
 
 def generate_description(filename, opts):
     record = extract_metadata(filename)
-    for field in ("user", "url", "layer"):
+    for field in ("user", "url", "license"): #, "layer"):
         record.setdefault(field, getattr(opts, field))
     if not record["crs"]:
         raise Exception("CRS unknown!")
@@ -95,7 +104,6 @@ def generate_description(filename, opts):
         raise Exception("URL not specified!")
     if record["url"].endswith("/"):
         record["url"] += os.path.basename(record.pop("filename"))
-    record["license"] = {"name": opts.license}
     return record
 
 def post_description(filename, opts):
@@ -105,17 +113,21 @@ def post_description(filename, opts):
     req = urllib2.Request(opts.service + "image/")
     try:
         response = urllib2.urlopen(req, content)
-    except IOError:
-        print >>sys.stderr, "error."
+    except IOError, e:
+        print >>sys.stderr, "error:", e.read()
         raise
-    result = response.read()
-    return json.loads(result)
+    result = json.loads(response.read())
+    if opts.verbose:
+        print >>sys.stderr, result
+    if "error" in result:
+        raise Exception(result["error"])
+    return result
 
 def walk_path(path, opts):
     pass
 
 href_match = re.compile(r'href="([^\.][^"]+)"', re.IGNORECASE)
-img_match = re.compile(r'\.tiff?', re.IGNORECASE)
+img_match = re.compile(r'\.(?:tiff?|jpe?g)$', re.IGNORECASE)
 dir_match = re.compile(r'/$')
 
 def scrape_http(content):
@@ -159,7 +171,7 @@ def spider(urls, opts):
             subdirs, imgs = scrape_http(result)
         else:
             subdirs, imgs = scrape_ftp(result)
-        print >>sys.stderr, len(subdirs), ": subdirs /", len(imgs), "images"
+        print >>sys.stderr, ":", len(subdirs), "subdirs /", len(imgs), "images"
         for subdir in subdirs:
             subdir = urlparse.urljoin(item, subdir)
             if not subdir.startswith(item): continue

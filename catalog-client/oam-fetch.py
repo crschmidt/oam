@@ -16,7 +16,7 @@ def parse_options():
     #parser.add_option("-U", "--user", dest="user", help="OAM username")
     #parser.add_option("-P", "--password", dest="pass", help="OAM password")
     parser.add_option("-s", "--service", dest="service",
-        help="OAM service base URL", default="http://adhoc.osgeo.osuosl.org:8000/")
+        help="OAM service base URL", default="http://oam.osgeo.org/api/")
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")

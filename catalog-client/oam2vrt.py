@@ -138,16 +138,18 @@ def write_vrt_source(output, target, source, band):
         print "ERROR: Source window:", source_win, "Target window:", target_win
         return
     band_idx, data_type, block_width, block_height = source.bands[band]
-    output.write('\t\t<SimpleSource>\n')
+    output.write('\t\t<ComplexSource>\n')
     output.write(('\t\t\t<SourceFilename relativeToVRT="0">/vsicurl/%s' +
         '</SourceFilename>\n') % source.path)
     output.write('\t\t\t<SourceBand>%i</SourceBand>\n' % band_idx)
+    ### TODO: make a config option for this.
+    output.write('\t\t\t<NODATA>0</NODATA>\n')
     output.write(('\t\t\t<SourceProperties RasterXSize="%i" RasterYSize="%i"' +
                 ' DataType="%s" BlockXSize="%i" BlockYSize="%i"/>\n')
                 % (source.width, source.height, data_type, block_width, block_height))
     output.write('\t\t\t<SrcRect xOff="%i" yOff="%i" xSize="%i" ySize="%i"/>\n' % source_win)
     output.write('\t\t\t<DstRect xOff="%i" yOff="%i" xSize="%i" ySize="%i"/>\n' % target_win)
-    output.write('\t\t</SimpleSource>\n')
+    output.write('\t\t</ComplexSource>\n')
 
 def write_vrt(target, sources):
     """
@@ -175,7 +177,7 @@ def write_vrt(target, sources):
     for band, interp in enumerate(('Red', 'Green', 'Blue')):
         output.write('\t<VRTRasterBand dataType="Byte" band="%i">\n' % (band+1))
         output.write('\t\t<ColorInterp>%s</ColorInterp>\n' % interp)
-        output.write('\t\t<NoDataValue>0</NoDataValue>\n')
+        #output.write('\t\t<NoDataValue>0</NoDataValue>\n')
         for source in sources:
             write_vrt_source(output, target, source, interp)
         output.write('\t</VRTRasterBand>\n')

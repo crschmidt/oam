@@ -17,42 +17,53 @@ def parse_options():
     #parser.add_option("-P", "--password", dest="pass", help="OAM password")
     parser.add_option("-s", "--service", dest="service",
         help="OAM service base URL", default="http://oam.osgeo.org/api/")
-    #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
+    parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
     parser.add_option("-i", "--image", dest="image", type="int", help="Image ID")
+    parser.add_option("-a", "--archive", dest="archive", action="store_true", default=False, help="Include archive images")
     (opts, args) = parser.parse_args()
     if not opts.service.endswith("/"):
         opts.service += "/"
     opts.bbox = map(float, args)
     return opts
 
-def fetch_layer(bbox, opts):
+def call_endpoint(endpoint, opts):
+    url = opts.service + endpoint
+    if opts.archive:
+        if "?" in url:
+            url += "&archive=true"
+        else:
+            url += "?archive=true"
+    if opts.debug: print >>sys.stderr, " ", url
+    req = urllib2.Request(url)
+    try:
+        response = urllib2.urlopen(req)
+    except IOError, e:
+        print >>sys.stderr, "error:", e.read()
+        raise
+    result = response.read()
+    return json.loads(result)
+
+def fetch_layer(opts):
     print >>sys.stderr, "Fetching descriptions...",
-    req = urllib2.Request(opts.service + "layer/" + str(opts.layer))
-    try:
-        response = urllib2.urlopen(req)
-    except IOError, e:
-        print >>sys.stderr, "error."
-        raise
-    result = response.read()
+    result = call_endpoint("layer/%d" % opts.layer, opts)
     print >>sys.stderr, "done."
-    return json.loads(result)
+    return result
 
-def fetch_image(id, opts):
+def fetch_image(opts):
+    if opts.image:
+        endpoint = "image/%d" % opts.image
+    elif opts.bbox:
+        endpoint = "image/?bbox=%f,%f,%f,%f" % tuple(opts.bbox)
+    else:
+        raise Exception("You must provide either an image ID or a bounding box.")
     print >>sys.stderr, "Fetching description...",
-    req = urllib2.Request(opts.service + "image/%d/" % id)
-    try:
-        response = urllib2.urlopen(req)
-    except IOError, e:
-        print >>sys.stderr, "error."
-        raise
-    result = response.read()
+    result = call_endpoint(endpoint, opts)
     print >>sys.stderr, "done."
-    return json.loads(result)
+    return result
 
-
-def fetch_images(layer, opts):
+def fetch_image_files(layer, opts):
     if opts.layer:
         path = str(opts.layer)
         if not opts.test and not os.path.isdir(path):
@@ -95,13 +106,14 @@ def run_gdalbuildvrt(opts):
 if __name__ == "__main__":
     import pprint
     opts = parse_options()
-    if opts.image:
-        image = fetch_image(opts.image, opts)
+    if not opts.layer:
+        result = fetch_image(opts)
         if opts.test:
-            print image
+            print result
         else:
-            fetch_images({"images": [image]}, opts)
+            image_list = result.get("images", [image])
+            fetch_images(image_list, opts)
     else:
-        layer = fetch_layer([], opts)
-        fetch_images({"images": [opts.layer]}, opts)
+        layer = fetch_layer(opts)
+        fetch_image_files(opts.layer, opts)
         run_gdalbuildvrt(opts)

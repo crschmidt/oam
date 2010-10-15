@@ -21,13 +21,13 @@ def parse_options():
     parser = optparse.OptionParser()
     parser.add_option("-U", "--user", dest="user", help="OAM username")
     parser.add_option("-P", "--password", dest="pass", help="OAM password")
-    parser.add_option("-s", "--service", dest="service",
+    parser.add_option("-S", "--service", dest="service",
         help="OAM service base URL", default="http://oam.osgeo.org/api/")
     #parser.add_option("-d", "--debug", dest="debug", action="store_true", default=False, help="Debug mode (dump HTTP errors)")
     parser.add_option("-t", "--test", dest="test", action="store_true", default=False, help="Test mode (don't post to server)")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", help="Verbosity", default="")
-    parser.add_option("-r", "--recursive", dest="recursive", action="store_true", default=False, help="Perform recursive HTTP/FTP queries.")
-    parser.add_option("-c", "--license", dest="license", type="int", default=1, help="Redistribution license")
+    parser.add_option("-r", "--recursive", dest="recursive", action="store_true", default=False, help="Perform recursive HTTP/FTP indexing.")
+    parser.add_option("-c", "--license", dest="license", type="int", default=1, help="Redistribution license ID")
     parser.add_option("-l", "--layer", dest="layer", type="int", help="Layer ID")
     parser.add_option("-u", "--url", dest="url", help="Image URL", default="")
     (opts, args) = parser.parse_args()

@@ -1,0 +1,2 @@
+$ python oam2vrt.py -a -- oam.vrt -72.305 18.494 -72.24 18.54
+$ gdal_translate -outsize 10% 10% oam.vrt ex.tif

@@ -23,10 +23,18 @@ Generally, what this means is that the image is:
 * With internal tiling at 512px x 512px
 * Has overviews to provide easy access to lower levels of detail
   without reading the entire image.
+* Uses YCbCr JPEG compression at quality setting 75
 
 Processed images will be read by the OpenAerialMap server to gather additional
 metadata -- the metadata of the file is presumed to override the metadata
 passed in by a user, where available.
+
+OpenAerialMap imagery will be accessed over the network -- either directly,
+or via client tools. As a result, one of the important aspects of processed
+OpenAerialMap imagery is to minimize the amount of network bandwidth 
+consumed. As a result, we have attempted to identify the best option for
+saving space for storage as well as minimizing potential network bandwidth
+while not compromising image quality. 
 
 Imagery Availability
 ++++++++++++++++++++

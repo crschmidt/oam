@@ -32,6 +32,10 @@ def license(request, id=None):
         return json_response(request, l)
     elif id != None:
         l = License.objects.get(pk=id)
+        if request.method == "POST":
+            data = simplejson.loads(request.raw_post_data)
+            l.from_json(data)
+            l.save()
         return json_response(request, l)
     else:
         licenses = License.objects.all()

@@ -26,7 +26,7 @@ General API Information
 +++++++++++++++++++++++
 
 The Imagery Index API is designed with REST in mind. At its core, each 
-resource has a representation as JSON. 
+resource has a representation as JSON.  
 
 Errors
 ------
@@ -47,8 +47,80 @@ true instead of false.
 
 .. _image:
 
+License API
++++++++++++
+
+API Path: /api/license/
+
+Simplest License POST::
+ 
+ {
+   "name": "Public Domain",
+ }
+
+Response::
+
+  {
+    "id": 1, 
+    "url": "", 
+    "additional": "", 
+    "options": {
+        "attribution": false, 
+        "sharealike": false, 
+        "noncommercial": false
+    }, 
+    "name": "Public Domain"
+  }
+
+The 'options' object can contain boolean flags for:
+
+* 'noncommercial'
+* 'attribution'
+* 'sharealike'
+
+Each option is a boolean option to control whether the flag applies to the 
+license in question.
+
+For example, for the CC-By-NC-SA license, you would post something like::
+
+ { 
+    "name": "CC-BY-NC-SA",
+    "url": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+    "options": { 
+        "noncommercial": true, 
+        "sharealike": true, 
+        "attribution": true 
+    }
+  } 
+
+Note that once a license is created, it is possible to use the license
+by simply referring to it by the ID returned in the POST response.
+
+::
+
+ { 
+    "id": 5,
+    "name": "CC-BY-NC-SA",
+    "url": "http://creativecommons.org/licenses/by-nc-sa/3.0/",
+    "options": { 
+        "noncommercial": true, 
+        "sharealike": true, 
+        "attribution": true 
+    }
+  }
+
+The following licenses are available are provided as part of the index.
+
+* **1**: `Public Domain <http://creativecommons.org/publicdomain/zero/1.0/>`_ 
+* **2**: `CC-By <http://creativecommons.org/licenses/by/3.0/>`_
+* **3**: `CC-By-SA <http://creativecommons.org/licenses/by-sa/3.0/>`_
+* **4**: `CC-By-NC <http://creativecommons.org/licenses/by-nc/3.0/>`_
+* **5**: `CC-By-NC-SA <http://creativecommons.org/licenses/by-nc-sa/3.0/>`_
+ 
 Image API
 +++++++++
+
+API Path: /api/image/
 
 Simplest Image POST::
 
@@ -75,7 +147,8 @@ representation representation::
       "url":  "",
       "flags": {},
       "name":  "Public Domain",
-      "additional":  ""
+      "additional":  "",
+      "id": 1
     },
     "file_format": null,
     "url": "http://example.com/200.tif",

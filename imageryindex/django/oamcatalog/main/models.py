@@ -18,26 +18,26 @@ class License(models.Model):
         for flag,value in flags.items():
             if flag not in self.flaglist:
                 errors.append("Flag %s not supported: only supports %s" % (flag, ",".join(self.flaglist)))
-            if value == "required": 
+            if value == True: 
                 setattr(self, flag, True)
             else:
-                errors.append("Only value supported for flags is 'required'")
-        if errors:
-            raise Exception(errors)
+                setattr(self, flag, False)
         self.save()
         return self
     def to_json(self):
         flags = {}
         for key in self.flaglist:
             if getattr(self, key) == True:
-                flags[key] = 'required'
+                flags[key] = True
+            else:
+                flags[key] = False
 
         return {
             'id': self.id,
             'name': self.name,
             'additional': self.additional,
             'url': self.url,
-            'flags': flags
+            'options': flags
         }    
 
 class Attribution(models.Model):

@@ -135,4 +135,6 @@ def json_response(request, obj):
     elif request.GET.has_key('handler'):
         data = "%s(%s);" % (request.GET['handler'], data)
     
-    return HttpResponse(data)
+    r = HttpResponse(data)
+    r['Access-Control-Allow-Origin'] = "*"
+    return r

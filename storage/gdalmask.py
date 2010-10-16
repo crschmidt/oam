@@ -72,8 +72,8 @@ for col in range(0, target.RasterXSize, block_width):
                 if data[0][byte] == nodata[0] and data[1][byte] == nodata[1] and data[2][byte] == nodata[2]:
                     mask[byte] = 0
         for n, block in enumerate(data):
-            target_bands[n].WriteRaster(col, row, block_width, block_height, block)
-        mask_band.WriteRaster(col, row, block_width, block_height, mask.tostring())
+            target_bands[n].WriteRaster(col, row, width, height, block)
+        mask_band.WriteRaster(col, row, width, height, mask.tostring())
         
         if int(blocks_written / total_blocks * 10) != int((blocks_written + 1) / total_blocks * 10):
             count = int((blocks_written + 1) / total_blocks * 10)

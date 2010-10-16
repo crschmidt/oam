@@ -7,16 +7,16 @@ clearinghouse for the OpenAerialMap imagery data.
 The core object in the imagery index is an :ref:`image`. There are two types
 of images -- an Archive image, and a Processed image. 
  
- * Archive Image: This is designed to be metadata about a file which
-   has not been processed for OAM, but which could be processed either by
-   tools or by a human. This might mean that the imagery is only available
-   in a compressed format, or is in an unusual projection. Generally 
-   speaking, this is the case for imagery provided over the web by
-   most government agencies.
+* Archive Image: This is designed to be metadata about a file which
+  has not been processed for OAM, but which could be processed either by
+  tools or by a human. This might mean that the imagery is only available
+  in a compressed format, or is in an unusual projection. Generally 
+  speaking, this is the case for imagery provided over the web by
+  most government agencies.
 
- * Processed Image: A processed image is an image which has been specifically
-   created for OAM, or fits the needs of an OAM client well. For more details,
-   see :ref:`optimized`.
+* Processed Image: A processed image is an image which has been specifically
+  created for OAM, or fits the needs of an OAM client well. For more details,
+  see :ref:`optimized`.
 
 The default for images which are uploaded to OpenAerialMap is to be archive
 images. To change this, set the archive flag of the image to False when 

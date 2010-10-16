@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>OAM: Boxes</title>
+    <link rel="stylesheet" href="http://openlayers.org/api/theme/default/style.css" type="text/css" />
+    <script src="http://openlayers.org/api/OpenLayers.js"></script>
+    <script type="text/javascript">
+        var map, layer;
+        var OAMFormat = OpenLayers.Class(OpenLayers.Format.JSON, {
+            'read': function(json,filter) {
+                if (typeof json == "string") {
+                    obj = OpenLayers.Format.JSON.prototype.read.apply(this,
+                                                                      [json, filter]);
+                } else { 
+                    obj = json;
+                }    
+                if(!obj) {
+                    OpenLayers.Console.error("Bad JSON: " + json);
+                }
+                var features = [];
+                for (i = 0; i < obj.images.length; i++) {
+                    var image = obj.images[i];
+                    var bounds = OpenLayers.Bounds.fromArray(image.bbox);
+                    var f = new OpenLayers.Feature.Vector(bounds.toGeometry());
+                    features.push(f);
+                }
+                return features;
+            }
+        });
+                
+        function init(){
+            
+            map = new OpenLayers.Map( 'map' );
+            layer = new OpenLayers.Layer.OSM("OSM");
+            map.addLayer(layer);
+            layer = new OpenLayers.Layer.Vector("", {
+                strategies: [new OpenLayers.Strategy.Fixed()],
+                protocol: new OpenLayers.Protocol.HTTP({
+                   url: "http://oam.osgeo.org/api/image/?archive=1",
+                   format: new OAMFormat()
+                })});
+            map.addLayer(layer); 
+            layer.events.register("loadend", layer, function() {
+                layer.map.zoomToExtent(layer.getDataExtent())
+            });    
+            map.zoomToMaxExtent();
+        }
+    </script>
+  </head>
+  <body onload="init()">
+    <div id="map" class="smallmap" style="width:100%; height: 100%"></div>
+  </body>
+</html>

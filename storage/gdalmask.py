@@ -36,19 +36,20 @@ nodata = [band.GetNoDataValue() for band in bands]
 use_alpha = (len(bands) > 4)
 use_nodata = (not use_alpha and len([n for n in nodata if n is not None]) == 3)
 
-if not use_alpha:
+if use_alpha:
+    print >>sys.stderr, "Using alpha band to generate mask."
+else:
     if use_nodata:
-        nodata = map(int, nodata)
+        print >>sys.stderr, "Using NODATA values to generate mask."
+        nodata = [chr(int(n)) for n in nodata]
     else:
-        nodata = [0, 0, 0]
-    use_nodata = True
+        print >>sys.stderr, "Using black to generate mask."
+        nodata = ["\0", "\0", "\0"]
+        use_nodata = True
 
-nodata = [chr(n) for n in nodata]
-
-if not (target_bands[0].GetMaskFlags() & (gdal.GMF_ALL_VALID | gdal.GMF_NODATA | gdal.GMF_ALPHA)):
-    target.CreateMaskBand(gdal.GMF_PER_DATASET)
-
+target.CreateMaskBand(gdal.GMF_PER_DATASET)
 mask_band = target_bands[0].GetMaskBand()
+
 for col in range(0, source.RasterXSize, block_width):
     for row in range(0, source.RasterYSize, block_height):
         data = [band.ReadRaster(col, row, block_width, block_height) for band in bands[:3]]
@@ -69,8 +70,9 @@ for col in range(0, source.RasterXSize, block_width):
             target_bands[n].WriteRaster(col, row, block_width, block_height, block)
         #mask = "".join(mask)
         mask_band.WriteRaster(col, row, block_width, block_height, mask)
-        print >>sys.stderr, ".", 
+        sys.stderr.write(".")
 
+sys.stderr.write("\n")
 mask_band = None
 target_bands = None
 target = None
